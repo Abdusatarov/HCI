@@ -1,0 +1,44 @@
+[
+  {
+    "id": "Order",
+    "title": "Интернет-аптека · Заказ от поиска до доставки",
+    "nodes": 14,
+    "flows": 14,
+    "diagram": "Order_diagram"
+  },
+  {
+    "id": "Catalog",
+    "title": "01 · Поиск и корзина",
+    "nodes": 11,
+    "flows": 12,
+    "diagram": "Catalog_diagram"
+  },
+  {
+    "id": "Eligibility",
+    "title": "02 · Наличие и рецептурные ограничения",
+    "nodes": 14,
+    "flows": 19,
+    "diagram": "Eligibility_diagram"
+  },
+  {
+    "id": "Checkout",
+    "title": "03 · Адрес, доставка и итоговая проверка",
+    "nodes": 17,
+    "flows": 21,
+    "diagram": "Checkout_diagram"
+  },
+  {
+    "id": "Payment",
+    "title": "04 · Идемпотентная оплата и создание заказа",
+    "nodes": 19,
+    "flows": 23,
+    "diagram": "Payment_diagram"
+  },
+  {
+    "id": "Fulfilment",
+    "title": "05 · Сборка, доставка, отмена и возврат",
+    "nodes": 17,
+    "flows": 19,
+    "diagram": "Fulfilment_diagram"
+  }
+]

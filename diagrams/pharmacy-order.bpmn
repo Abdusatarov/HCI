@@ -1,0 +1,2126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="PharmacyDefinitions" targetNamespace="https://github.com/Abdusatarov/HCI" exporter="HCI deterministic generator" exporterVersion="1.0">
+  <bpmn:process id="Order" name="Интернет-аптека · Заказ от поиска до доставки" isExecutable="false">
+    <bpmn:documentation>Conceptual HCI process. User=buyer; Service=pharmacy staff and service adapters; Script/System=local deterministic automation. API tasks include technical retries with the same operation ID; business outcomes use explicit gateways.</bpmn:documentation>
+    <bpmn:laneSet id="Order_lanes">
+      <bpmn:lane id="Order_lane0" name="User · Покупатель">
+        <bpmn:flowNodeRef>Order_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_catalog</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_hascart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_stop</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_checkout</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_ready</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_exit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Order_lane1" name="Service · Аптека / интеграции">
+        <bpmn:flowNodeRef>Order_eligible</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_allowed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_pay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_paid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_fulfil</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Order_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Order_lane2" name="Script/System · Автоматизация">
+        <bpmn:flowNodeRef>Order_pending</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Order_start" name="Нужен товар">
+      <bpmn:outgoing>Order_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:callActivity id="Order_catalog" name="01 · Выбор товара" calledElement="Catalog">
+      <bpmn:incoming>Order_f0</bpmn:incoming>
+      <bpmn:outgoing>Order_f1</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Order_hascart" name="Корзина сформирована?">
+      <bpmn:incoming>Order_f1</bpmn:incoming>
+      <bpmn:outgoing>Order_f2</bpmn:outgoing>
+      <bpmn:outgoing>Order_f3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:callActivity id="Order_eligible" name="02 · Наличие и рецепт" calledElement="Eligibility">
+      <bpmn:incoming>Order_f2</bpmn:incoming>
+      <bpmn:outgoing>Order_f4</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Order_allowed" name="Продажа допустима?">
+      <bpmn:incoming>Order_f4</bpmn:incoming>
+      <bpmn:outgoing>Order_f5</bpmn:outgoing>
+      <bpmn:outgoing>Order_f6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Order_stop" name="Покупка остановлена; помощь">
+      <bpmn:incoming>Order_f5</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Order_checkout" name="03 · Адрес, доставка, проверка" calledElement="Checkout">
+      <bpmn:incoming>Order_f6</bpmn:incoming>
+      <bpmn:outgoing>Order_f7</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Order_ready" name="Готов к оплате?">
+      <bpmn:incoming>Order_f7</bpmn:incoming>
+      <bpmn:outgoing>Order_f8</bpmn:outgoing>
+      <bpmn:outgoing>Order_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Order_exit" name="Выход; корзина сохранена">
+      <bpmn:incoming>Order_f3</bpmn:incoming>
+      <bpmn:incoming>Order_f8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Order_pay" name="04 · Оплата и заказ" calledElement="Payment">
+      <bpmn:incoming>Order_f9</bpmn:incoming>
+      <bpmn:outgoing>Order_f10</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="Order_paid" name="Заказ подтверждён?">
+      <bpmn:incoming>Order_f10</bpmn:incoming>
+      <bpmn:outgoing>Order_f11</bpmn:outgoing>
+      <bpmn:outgoing>Order_f12</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Order_pending" name="Ожидается проверка; ID операции">
+      <bpmn:incoming>Order_f11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:callActivity id="Order_fulfil" name="05 · Исполнение / возврат" calledElement="Fulfilment">
+      <bpmn:incoming>Order_f12</bpmn:incoming>
+      <bpmn:outgoing>Order_f13</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:endEvent id="Order_end" name="Завершено: доставка или отмена">
+      <bpmn:incoming>Order_f13</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Order_f0" sourceRef="Order_start" targetRef="Order_catalog"/>
+    <bpmn:sequenceFlow id="Order_f1" sourceRef="Order_catalog" targetRef="Order_hascart"/>
+    <bpmn:sequenceFlow id="Order_f2" sourceRef="Order_hascart" targetRef="Order_eligible" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f3" sourceRef="Order_hascart" targetRef="Order_exit" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f4" sourceRef="Order_eligible" targetRef="Order_allowed"/>
+    <bpmn:sequenceFlow id="Order_f5" sourceRef="Order_allowed" targetRef="Order_stop" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f6" sourceRef="Order_allowed" targetRef="Order_checkout" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f7" sourceRef="Order_checkout" targetRef="Order_ready"/>
+    <bpmn:sequenceFlow id="Order_f8" sourceRef="Order_ready" targetRef="Order_exit" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f9" sourceRef="Order_ready" targetRef="Order_pay" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f10" sourceRef="Order_pay" targetRef="Order_paid"/>
+    <bpmn:sequenceFlow id="Order_f11" sourceRef="Order_paid" targetRef="Order_pending" name="Нет / неизвестно">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет / неизвестно"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f12" sourceRef="Order_paid" targetRef="Order_fulfil" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Order_f13" sourceRef="Order_fulfil" targetRef="Order_end"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Order_collab">
+    <bpmn:participant id="Order_pool" name="Интернет-аптека · Заказ от поиска до доставки" processRef="Order"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Catalog" name="01 · Поиск и корзина" isExecutable="false">
+    <bpmn:documentation>Conceptual HCI process. User=buyer; Service=pharmacy staff and service adapters; Script/System=local deterministic automation. API tasks include technical retries with the same operation ID; business outcomes use explicit gateways.</bpmn:documentation>
+    <bpmn:laneSet id="Catalog_lanes">
+      <bpmn:lane id="Catalog_lane0" name="User · Покупатель">
+        <bpmn:flowNodeRef>Catalog_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_query</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_empty</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_choice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_exit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_product</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_cart</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Catalog_lane1" name="Service · Аптека / интеграции">
+        <bpmn:flowNodeRef>Catalog_search</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Catalog_found</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Catalog_lane2" name="Script/System · Автоматизация"/>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Catalog_start" name="Начало поиска">
+      <bpmn:outgoing>Catalog_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Catalog_query" name="Ввести название / выбрать категорию">
+      <bpmn:incoming>Catalog_f0</bpmn:incoming>
+      <bpmn:incoming>Catalog_f6</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Catalog_search" name="Получить каталог">
+      <bpmn:incoming>Catalog_f1</bpmn:incoming>
+      <bpmn:incoming>Catalog_f8</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Catalog_found" name="Ответ каталога?">
+      <bpmn:incoming>Catalog_f2</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f3</bpmn:outgoing>
+      <bpmn:outgoing>Catalog_f4</bpmn:outgoing>
+      <bpmn:outgoing>Catalog_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Catalog_empty" name="Исправить запрос / открыть помощь">
+      <bpmn:incoming>Catalog_f4</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Catalog_retry" name="Сохранённый запрос: повторить / выйти">
+      <bpmn:incoming>Catalog_f5</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f7</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Catalog_choice" name="Повторить?">
+      <bpmn:incoming>Catalog_f7</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f8</bpmn:outgoing>
+      <bpmn:outgoing>Catalog_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Catalog_exit" name="Выход без заказа">
+      <bpmn:incoming>Catalog_f9</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Catalog_product" name="Проверить форму, дозировку, цену">
+      <bpmn:incoming>Catalog_f3</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Catalog_cart" name="Выбрать количество; добавить в корзину">
+      <bpmn:incoming>Catalog_f10</bpmn:incoming>
+      <bpmn:outgoing>Catalog_f11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Catalog_end" name="Корзина сформирована">
+      <bpmn:incoming>Catalog_f11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Catalog_f0" sourceRef="Catalog_start" targetRef="Catalog_query"/>
+    <bpmn:sequenceFlow id="Catalog_f1" sourceRef="Catalog_query" targetRef="Catalog_search"/>
+    <bpmn:sequenceFlow id="Catalog_f2" sourceRef="Catalog_search" targetRef="Catalog_found"/>
+    <bpmn:sequenceFlow id="Catalog_f3" sourceRef="Catalog_found" targetRef="Catalog_product" name="Есть">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Есть"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Catalog_f4" sourceRef="Catalog_found" targetRef="Catalog_empty" name="Нет результатов">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет результатов"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Catalog_f5" sourceRef="Catalog_found" targetRef="Catalog_retry" name="Ошибка / offline">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Ошибка / offline"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Catalog_f6" sourceRef="Catalog_empty" targetRef="Catalog_query"/>
+    <bpmn:sequenceFlow id="Catalog_f7" sourceRef="Catalog_retry" targetRef="Catalog_choice"/>
+    <bpmn:sequenceFlow id="Catalog_f8" sourceRef="Catalog_choice" targetRef="Catalog_search" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Catalog_f9" sourceRef="Catalog_choice" targetRef="Catalog_exit" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Catalog_f10" sourceRef="Catalog_product" targetRef="Catalog_cart"/>
+    <bpmn:sequenceFlow id="Catalog_f11" sourceRef="Catalog_cart" targetRef="Catalog_end"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Catalog_collab">
+    <bpmn:participant id="Catalog_pool" name="01 · Поиск и корзина" processRef="Catalog"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Eligibility" name="02 · Наличие и рецептурные ограничения" isExecutable="false">
+    <bpmn:documentation>Conceptual HCI process. User=buyer; Service=pharmacy staff and service adapters; Script/System=local deterministic automation. API tasks include technical retries with the same operation ID; business outcomes use explicit gateways.</bpmn:documentation>
+    <bpmn:laneSet id="Eligibility_lanes">
+      <bpmn:lane id="Eligibility_lane0" name="User · Покупатель">
+        <bpmn:flowNodeRef>Eligibility_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_edit</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_again</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_no</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_upload</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_fix</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_fixgo</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Eligibility_lane1" name="Service · Аптека / интеграции">
+        <bpmn:flowNodeRef>Eligibility_check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_ok</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_rx</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_result</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Eligibility_yes</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Eligibility_lane2" name="Script/System · Автоматизация">
+        <bpmn:flowNodeRef>Eligibility_wait</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Eligibility_start" name="Есть корзина">
+      <bpmn:outgoing>Eligibility_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:serviceTask id="Eligibility_check" name="Перепроверить остаток, цену, правила">
+      <bpmn:incoming>Eligibility_f0</bpmn:incoming>
+      <bpmn:incoming>Eligibility_f4</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f1</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Eligibility_ok" name="Товар доступен?">
+      <bpmn:incoming>Eligibility_f1</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f2</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f6</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Eligibility_edit" name="Принять изменения / убрать товар">
+      <bpmn:incoming>Eligibility_f2</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f3</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Eligibility_again" name="Продолжить?">
+      <bpmn:incoming>Eligibility_f3</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f4</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Eligibility_no" name="Продажа не разрешена">
+      <bpmn:incoming>Eligibility_f5</bpmn:incoming>
+      <bpmn:incoming>Eligibility_f18</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:exclusiveGateway id="Eligibility_rx" name="Нужен рецепт?">
+      <bpmn:incoming>Eligibility_f6</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f7</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f8</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f9</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Eligibility_upload" name="Предоставить документ">
+      <bpmn:incoming>Eligibility_f8</bpmn:incoming>
+      <bpmn:incoming>Eligibility_f17</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f10</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Eligibility_review" name="Фармацевт проверяет документ">
+      <bpmn:incoming>Eligibility_f10</bpmn:incoming>
+      <bpmn:incoming>Eligibility_f15</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f11</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Eligibility_result" name="Проверка?">
+      <bpmn:incoming>Eligibility_f11</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f12</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f13</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f14</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Eligibility_fix" name="Исправить документ / помощь">
+      <bpmn:incoming>Eligibility_f9</bpmn:incoming>
+      <bpmn:incoming>Eligibility_f13</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f16</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Eligibility_fixgo" name="Исправить?">
+      <bpmn:incoming>Eligibility_f16</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f17</bpmn:outgoing>
+      <bpmn:outgoing>Eligibility_f18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Eligibility_wait" name="Проверить позже">
+      <bpmn:incoming>Eligibility_f14</bpmn:incoming>
+      <bpmn:outgoing>Eligibility_f15</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Eligibility_wait_timer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:endEvent id="Eligibility_yes" name="Допуск подтверждён">
+      <bpmn:incoming>Eligibility_f7</bpmn:incoming>
+      <bpmn:incoming>Eligibility_f12</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Eligibility_f0" sourceRef="Eligibility_start" targetRef="Eligibility_check"/>
+    <bpmn:sequenceFlow id="Eligibility_f1" sourceRef="Eligibility_check" targetRef="Eligibility_ok"/>
+    <bpmn:sequenceFlow id="Eligibility_f2" sourceRef="Eligibility_ok" targetRef="Eligibility_edit" name="Нет / изменилось / ошибка">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет / изменилось / ошибка"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f3" sourceRef="Eligibility_edit" targetRef="Eligibility_again"/>
+    <bpmn:sequenceFlow id="Eligibility_f4" sourceRef="Eligibility_again" targetRef="Eligibility_check" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f5" sourceRef="Eligibility_again" targetRef="Eligibility_no" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f6" sourceRef="Eligibility_ok" targetRef="Eligibility_rx" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f7" sourceRef="Eligibility_rx" targetRef="Eligibility_yes" name="Не нужен">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Не нужен"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f8" sourceRef="Eligibility_rx" targetRef="Eligibility_upload" name="Нужен">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нужен"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f9" sourceRef="Eligibility_rx" targetRef="Eligibility_fix" name="Требования неизвестны">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Требования неизвестны"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f10" sourceRef="Eligibility_upload" targetRef="Eligibility_review"/>
+    <bpmn:sequenceFlow id="Eligibility_f11" sourceRef="Eligibility_review" targetRef="Eligibility_result"/>
+    <bpmn:sequenceFlow id="Eligibility_f12" sourceRef="Eligibility_result" targetRef="Eligibility_yes" name="Одобрено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Одобрено"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f13" sourceRef="Eligibility_result" targetRef="Eligibility_fix" name="Отклонено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Отклонено"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f14" sourceRef="Eligibility_result" targetRef="Eligibility_wait" name="Ожидается">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Ожидается"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f15" sourceRef="Eligibility_wait" targetRef="Eligibility_review"/>
+    <bpmn:sequenceFlow id="Eligibility_f16" sourceRef="Eligibility_fix" targetRef="Eligibility_fixgo"/>
+    <bpmn:sequenceFlow id="Eligibility_f17" sourceRef="Eligibility_fixgo" targetRef="Eligibility_upload" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Eligibility_f18" sourceRef="Eligibility_fixgo" targetRef="Eligibility_no" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+  </bpmn:process>
+  <bpmn:collaboration id="Eligibility_collab">
+    <bpmn:participant id="Eligibility_pool" name="02 · Наличие и рецептурные ограничения" processRef="Eligibility"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Checkout" name="03 · Адрес, доставка и итоговая проверка" isExecutable="false">
+    <bpmn:documentation>Conceptual HCI process. User=buyer; Service=pharmacy staff and service adapters; Script/System=local deterministic automation. API tasks include technical retries with the same operation ID; business outcomes use explicit gateways.</bpmn:documentation>
+    <bpmn:laneSet id="Checkout_lanes">
+      <bpmn:lane id="Checkout_lane0" name="User · Покупатель">
+        <bpmn:flowNodeRef>Checkout_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_address</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_error</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_change</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_changego</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_cancel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_select</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_review</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_login</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Checkout_lane1" name="Service · Аптека / интеграции">
+        <bpmn:flowNodeRef>Checkout_delivery</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_available</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_session</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_state</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_ready</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Checkout_lane2" name="Script/System · Автоматизация">
+        <bpmn:flowNodeRef>Checkout_validate</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_valid</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Checkout_total</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Checkout_start" name="Товар допущен">
+      <bpmn:outgoing>Checkout_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Checkout_address" name="Указать адрес и контакт">
+      <bpmn:incoming>Checkout_f0</bpmn:incoming>
+      <bpmn:incoming>Checkout_f4</bpmn:incoming>
+      <bpmn:incoming>Checkout_f10</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Checkout_validate" name="Проверить обязательные поля" scriptFormat="text/plain">
+      <bpmn:incoming>Checkout_f1</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f2</bpmn:outgoing>
+      <bpmn:script>Design specification: Проверить обязательные поля</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:exclusiveGateway id="Checkout_valid" name="Поля корректны?">
+      <bpmn:incoming>Checkout_f2</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f3</bpmn:outgoing>
+      <bpmn:outgoing>Checkout_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Checkout_error" name="Исправить поля; данные сохранены">
+      <bpmn:incoming>Checkout_f3</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f4</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Checkout_delivery" name="Проверить адрес, зону, слоты и цену">
+      <bpmn:incoming>Checkout_f5</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f6</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Checkout_available" name="Доставка доступна?">
+      <bpmn:incoming>Checkout_f6</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f7</bpmn:outgoing>
+      <bpmn:outgoing>Checkout_f8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Checkout_change" name="Изменить адрес / время / выйти">
+      <bpmn:incoming>Checkout_f8</bpmn:incoming>
+      <bpmn:incoming>Checkout_f18</bpmn:incoming>
+      <bpmn:incoming>Checkout_f19</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f9</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Checkout_changego" name="Продолжить?">
+      <bpmn:incoming>Checkout_f9</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f10</bpmn:outgoing>
+      <bpmn:outgoing>Checkout_f11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Checkout_cancel" name="Выход до оплаты">
+      <bpmn:incoming>Checkout_f11</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:userTask id="Checkout_select" name="Выбрать слот и способ оплаты">
+      <bpmn:incoming>Checkout_f7</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f12</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:scriptTask id="Checkout_total" name="Рассчитать полный итог" scriptFormat="text/plain">
+      <bpmn:incoming>Checkout_f12</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f13</bpmn:outgoing>
+      <bpmn:script>Design specification: Рассчитать полный итог</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:userTask id="Checkout_review" name="Проверить итог, адрес и согласиться">
+      <bpmn:incoming>Checkout_f13</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f14</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Checkout_session" name="Проверить сессию, цену, резерв и слот">
+      <bpmn:incoming>Checkout_f14</bpmn:incoming>
+      <bpmn:incoming>Checkout_f20</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Checkout_state" name="Результат?">
+      <bpmn:incoming>Checkout_f15</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f16</bpmn:outgoing>
+      <bpmn:outgoing>Checkout_f17</bpmn:outgoing>
+      <bpmn:outgoing>Checkout_f18</bpmn:outgoing>
+      <bpmn:outgoing>Checkout_f19</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Checkout_login" name="Войти снова; восстановить корзину">
+      <bpmn:incoming>Checkout_f17</bpmn:incoming>
+      <bpmn:outgoing>Checkout_f20</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Checkout_ready" name="Готов к оплате">
+      <bpmn:incoming>Checkout_f16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Checkout_f0" sourceRef="Checkout_start" targetRef="Checkout_address"/>
+    <bpmn:sequenceFlow id="Checkout_f1" sourceRef="Checkout_address" targetRef="Checkout_validate"/>
+    <bpmn:sequenceFlow id="Checkout_f2" sourceRef="Checkout_validate" targetRef="Checkout_valid"/>
+    <bpmn:sequenceFlow id="Checkout_f3" sourceRef="Checkout_valid" targetRef="Checkout_error" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f4" sourceRef="Checkout_error" targetRef="Checkout_address"/>
+    <bpmn:sequenceFlow id="Checkout_f5" sourceRef="Checkout_valid" targetRef="Checkout_delivery" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f6" sourceRef="Checkout_delivery" targetRef="Checkout_available"/>
+    <bpmn:sequenceFlow id="Checkout_f7" sourceRef="Checkout_available" targetRef="Checkout_select" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f8" sourceRef="Checkout_available" targetRef="Checkout_change" name="Нет / API недоступен">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет / API недоступен"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f9" sourceRef="Checkout_change" targetRef="Checkout_changego"/>
+    <bpmn:sequenceFlow id="Checkout_f10" sourceRef="Checkout_changego" targetRef="Checkout_address" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f11" sourceRef="Checkout_changego" targetRef="Checkout_cancel" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f12" sourceRef="Checkout_select" targetRef="Checkout_total"/>
+    <bpmn:sequenceFlow id="Checkout_f13" sourceRef="Checkout_total" targetRef="Checkout_review"/>
+    <bpmn:sequenceFlow id="Checkout_f14" sourceRef="Checkout_review" targetRef="Checkout_session"/>
+    <bpmn:sequenceFlow id="Checkout_f15" sourceRef="Checkout_session" targetRef="Checkout_state"/>
+    <bpmn:sequenceFlow id="Checkout_f16" sourceRef="Checkout_state" targetRef="Checkout_ready" name="Подтверждено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Подтверждено"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f17" sourceRef="Checkout_state" targetRef="Checkout_login" name="Сессия истекла">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Сессия истекла"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f18" sourceRef="Checkout_state" targetRef="Checkout_change" name="Цена / наличие / слот изменились">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Цена / наличие / слот изменились"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f19" sourceRef="Checkout_state" targetRef="Checkout_change" name="Отмена">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Отмена"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Checkout_f20" sourceRef="Checkout_login" targetRef="Checkout_session"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Checkout_collab">
+    <bpmn:participant id="Checkout_pool" name="03 · Адрес, доставка и итоговая проверка" processRef="Checkout"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Payment" name="04 · Идемпотентная оплата и создание заказа" isExecutable="false">
+    <bpmn:documentation>Conceptual HCI process. User=buyer; Service=pharmacy staff and service adapters; Script/System=local deterministic automation. API tasks include technical retries with the same operation ID; business outcomes use explicit gateways.</bpmn:documentation>
+    <bpmn:laneSet id="Payment_lanes">
+      <bpmn:lane id="Payment_lane0" name="User · Покупатель">
+        <bpmn:flowNodeRef>Payment_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_decline</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_retry</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_exit</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Payment_lane1" name="Service · Аптека / интеграции">
+        <bpmn:flowNodeRef>Payment_pay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_result</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_status</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_known</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_persist</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_saved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_reconcile</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_recovered</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Payment_lane2" name="Script/System · Автоматизация">
+        <bpmn:flowNodeRef>Payment_key</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_new</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_unknown</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_timer</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_pending</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_success</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Payment_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Payment_start" name="Итог подтверждён">
+      <bpmn:outgoing>Payment_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:scriptTask id="Payment_key" name="Заблокировать Pay; назначить ID операции" scriptFormat="text/plain">
+      <bpmn:incoming>Payment_f0</bpmn:incoming>
+      <bpmn:outgoing>Payment_f1</bpmn:outgoing>
+      <bpmn:script>Design specification: Заблокировать Pay; назначить ID операции</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:serviceTask id="Payment_pay" name="Отправить платёж с idempotency key">
+      <bpmn:incoming>Payment_f1</bpmn:incoming>
+      <bpmn:incoming>Payment_f9</bpmn:incoming>
+      <bpmn:outgoing>Payment_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Payment_result" name="Статус провайдера?">
+      <bpmn:incoming>Payment_f2</bpmn:incoming>
+      <bpmn:outgoing>Payment_f3</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f4</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f5</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Payment_decline" name="Отказ / прервано: другой способ или выход">
+      <bpmn:incoming>Payment_f4</bpmn:incoming>
+      <bpmn:incoming>Payment_f14</bpmn:incoming>
+      <bpmn:outgoing>Payment_f6</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Payment_retry" name="Новая попытка?">
+      <bpmn:incoming>Payment_f6</bpmn:incoming>
+      <bpmn:outgoing>Payment_f7</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f8</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Payment_new" name="Новый ID только после конечного отказа" scriptFormat="text/plain">
+      <bpmn:incoming>Payment_f7</bpmn:incoming>
+      <bpmn:outgoing>Payment_f9</bpmn:outgoing>
+      <bpmn:script>Design specification: Новый ID только после конечного отказа</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="Payment_exit" name="Не оплачено">
+      <bpmn:incoming>Payment_f8</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Payment_unknown" name="Показать: проверяем; не повторять оплату" scriptFormat="text/plain">
+      <bpmn:incoming>Payment_f5</bpmn:incoming>
+      <bpmn:outgoing>Payment_f10</bpmn:outgoing>
+      <bpmn:script>Design specification: Показать: проверяем; не повторять оплату</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:intermediateCatchEvent id="Payment_timer" name="Повторная проверка через 30 с">
+      <bpmn:incoming>Payment_f10</bpmn:incoming>
+      <bpmn:outgoing>Payment_f11</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Payment_timer_timer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Payment_status" name="Запросить существующую операцию по ID">
+      <bpmn:incoming>Payment_f11</bpmn:incoming>
+      <bpmn:outgoing>Payment_f12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Payment_known" name="Статус известен?">
+      <bpmn:incoming>Payment_f12</bpmn:incoming>
+      <bpmn:outgoing>Payment_f13</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f14</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f15</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Payment_pending" name="Проверка отложена; ID и помощь">
+      <bpmn:incoming>Payment_f15</bpmn:incoming>
+      <bpmn:incoming>Payment_f21</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:serviceTask id="Payment_persist" name="Сохранить заказ однократно по ID оплаты">
+      <bpmn:incoming>Payment_f3</bpmn:incoming>
+      <bpmn:incoming>Payment_f13</bpmn:incoming>
+      <bpmn:outgoing>Payment_f16</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Payment_saved" name="Заказ сохранён?">
+      <bpmn:incoming>Payment_f16</bpmn:incoming>
+      <bpmn:outgoing>Payment_f17</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f18</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Payment_reconcile" name="Восстановить заказ по оплаченному ID">
+      <bpmn:incoming>Payment_f18</bpmn:incoming>
+      <bpmn:outgoing>Payment_f19</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Payment_recovered" name="Восстановлен?">
+      <bpmn:incoming>Payment_f19</bpmn:incoming>
+      <bpmn:outgoing>Payment_f20</bpmn:outgoing>
+      <bpmn:outgoing>Payment_f21</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:scriptTask id="Payment_success" name="Показать номер и подтверждённый статус" scriptFormat="text/plain">
+      <bpmn:incoming>Payment_f17</bpmn:incoming>
+      <bpmn:incoming>Payment_f20</bpmn:incoming>
+      <bpmn:outgoing>Payment_f22</bpmn:outgoing>
+      <bpmn:script>Design specification: Показать номер и подтверждённый статус</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:endEvent id="Payment_end" name="Заказ принят">
+      <bpmn:incoming>Payment_f22</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Payment_f0" sourceRef="Payment_start" targetRef="Payment_key"/>
+    <bpmn:sequenceFlow id="Payment_f1" sourceRef="Payment_key" targetRef="Payment_pay"/>
+    <bpmn:sequenceFlow id="Payment_f2" sourceRef="Payment_pay" targetRef="Payment_result"/>
+    <bpmn:sequenceFlow id="Payment_f3" sourceRef="Payment_result" targetRef="Payment_persist" name="Оплачено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Оплачено"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f4" sourceRef="Payment_result" targetRef="Payment_decline" name="Отказ / отмена">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Отказ / отмена"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f5" sourceRef="Payment_result" targetRef="Payment_unknown" name="Timeout / неизвестно / сбой">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Timeout / неизвестно / сбой"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f6" sourceRef="Payment_decline" targetRef="Payment_retry"/>
+    <bpmn:sequenceFlow id="Payment_f7" sourceRef="Payment_retry" targetRef="Payment_new" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f8" sourceRef="Payment_retry" targetRef="Payment_exit" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f9" sourceRef="Payment_new" targetRef="Payment_pay"/>
+    <bpmn:sequenceFlow id="Payment_f10" sourceRef="Payment_unknown" targetRef="Payment_timer"/>
+    <bpmn:sequenceFlow id="Payment_f11" sourceRef="Payment_timer" targetRef="Payment_status"/>
+    <bpmn:sequenceFlow id="Payment_f12" sourceRef="Payment_status" targetRef="Payment_known"/>
+    <bpmn:sequenceFlow id="Payment_f13" sourceRef="Payment_known" targetRef="Payment_persist" name="Оплачено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Оплачено"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f14" sourceRef="Payment_known" targetRef="Payment_decline" name="Конечный отказ">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Конечный отказ"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f15" sourceRef="Payment_known" targetRef="Payment_pending" name="Не удалось подтвердить">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Не удалось подтвердить"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f16" sourceRef="Payment_persist" targetRef="Payment_saved"/>
+    <bpmn:sequenceFlow id="Payment_f17" sourceRef="Payment_saved" targetRef="Payment_success" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f18" sourceRef="Payment_saved" targetRef="Payment_reconcile" name="Нет / timeout">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет / timeout"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f19" sourceRef="Payment_reconcile" targetRef="Payment_recovered"/>
+    <bpmn:sequenceFlow id="Payment_f20" sourceRef="Payment_recovered" targetRef="Payment_success" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f21" sourceRef="Payment_recovered" targetRef="Payment_pending" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Payment_f22" sourceRef="Payment_success" targetRef="Payment_end"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Payment_collab">
+    <bpmn:participant id="Payment_pool" name="04 · Идемпотентная оплата и создание заказа" processRef="Payment"/>
+    <bpmn:participant id="Payment_provider" name="Внешний платёжный провайдер"/>
+    <bpmn:messageFlow id="Payment_m0" sourceRef="Payment_pay" targetRef="Payment_provider" name="Платёж + ключ"/>
+    <bpmn:messageFlow id="Payment_m1" sourceRef="Payment_provider" targetRef="Payment_status" name="Статус по ID"/>
+  </bpmn:collaboration>
+  <bpmn:process id="Fulfilment" name="05 · Сборка, доставка, отмена и возврат" isExecutable="false">
+    <bpmn:documentation>Conceptual HCI process. User=buyer; Service=pharmacy staff and service adapters; Script/System=local deterministic automation. API tasks include technical retries with the same operation ID; business outcomes use explicit gateways.</bpmn:documentation>
+    <bpmn:laneSet id="Fulfilment_lanes">
+      <bpmn:lane id="Fulfilment_lane0" name="User · Покупатель">
+        <bpmn:flowNodeRef>Fulfilment_cancel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_pending</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Fulfilment_lane1" name="Service · Аптека / интеграции">
+        <bpmn:flowNodeRef>Fulfilment_start</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_pack</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_delivery</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_state</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_done</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_can</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_allowed</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_refund</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_refundstatus</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_refunded</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_end</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Fulfilment_lane2" name="Script/System · Автоматизация">
+        <bpmn:flowNodeRef>Fulfilment_delay</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_wait</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_notice</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Fulfilment_refundwait</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="Fulfilment_start" name="Заказ подтверждён">
+      <bpmn:outgoing>Fulfilment_f0</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Fulfilment_pack" name="Фармацевт собирает заказ">
+      <bpmn:incoming>Fulfilment_f0</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f1</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Fulfilment_delivery" name="Запросить доставку и актуальный статус">
+      <bpmn:incoming>Fulfilment_f1</bpmn:incoming>
+      <bpmn:incoming>Fulfilment_f6</bpmn:incoming>
+      <bpmn:incoming>Fulfilment_f10</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f2</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Fulfilment_state" name="Состояние доставки?">
+      <bpmn:incoming>Fulfilment_f2</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f3</bpmn:outgoing>
+      <bpmn:outgoing>Fulfilment_f4</bpmn:outgoing>
+      <bpmn:outgoing>Fulfilment_f7</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:endEvent id="Fulfilment_done" name="Доставка подтверждена">
+      <bpmn:incoming>Fulfilment_f3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:scriptTask id="Fulfilment_delay" name="Показать задержку; ETA только из ответа" scriptFormat="text/plain">
+      <bpmn:incoming>Fulfilment_f4</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f5</bpmn:outgoing>
+      <bpmn:script>Design specification: Показать задержку; ETA только из ответа</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:intermediateCatchEvent id="Fulfilment_wait" name="Следующее обновление">
+      <bpmn:incoming>Fulfilment_f5</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f6</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Fulfilment_wait_timer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="Fulfilment_cancel" name="Запросить отмену / подтвердить невозможность">
+      <bpmn:incoming>Fulfilment_f7</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f8</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:serviceTask id="Fulfilment_can" name="Проверить отмену и остановить исполнение">
+      <bpmn:incoming>Fulfilment_f8</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f9</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Fulfilment_allowed" name="Отмена подтверждена?">
+      <bpmn:incoming>Fulfilment_f9</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f10</bpmn:outgoing>
+      <bpmn:outgoing>Fulfilment_f11</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:serviceTask id="Fulfilment_refund" name="Запросить возврат один раз по ID заказа">
+      <bpmn:incoming>Fulfilment_f11</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f12</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:scriptTask id="Fulfilment_notice" name="Показать: возврат ожидается" scriptFormat="text/plain">
+      <bpmn:incoming>Fulfilment_f12</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f13</bpmn:outgoing>
+      <bpmn:script>Design specification: Показать: возврат ожидается</bpmn:script>
+    </bpmn:scriptTask>
+    <bpmn:intermediateCatchEvent id="Fulfilment_refundwait" name="Проверить возврат позже">
+      <bpmn:incoming>Fulfilment_f13</bpmn:incoming>
+      <bpmn:incoming>Fulfilment_f18</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f14</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Fulfilment_refundwait_timer">
+        <bpmn:timeDuration xsi:type="bpmn:tFormalExpression">PT30S</bpmn:timeDuration>
+      </bpmn:timerEventDefinition>
+    </bpmn:intermediateCatchEvent>
+    <bpmn:serviceTask id="Fulfilment_refundstatus" name="Получить подтверждённый статус возврата">
+      <bpmn:incoming>Fulfilment_f14</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f15</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="Fulfilment_refunded" name="Возврат завершён?">
+      <bpmn:incoming>Fulfilment_f15</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f16</bpmn:outgoing>
+      <bpmn:outgoing>Fulfilment_f17</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Fulfilment_pending" name="Показать ID возврата и помощь">
+      <bpmn:incoming>Fulfilment_f17</bpmn:incoming>
+      <bpmn:outgoing>Fulfilment_f18</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Fulfilment_end" name="Отмена и возврат подтверждены">
+      <bpmn:incoming>Fulfilment_f16</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Fulfilment_f0" sourceRef="Fulfilment_start" targetRef="Fulfilment_pack"/>
+    <bpmn:sequenceFlow id="Fulfilment_f1" sourceRef="Fulfilment_pack" targetRef="Fulfilment_delivery"/>
+    <bpmn:sequenceFlow id="Fulfilment_f2" sourceRef="Fulfilment_delivery" targetRef="Fulfilment_state"/>
+    <bpmn:sequenceFlow id="Fulfilment_f3" sourceRef="Fulfilment_state" targetRef="Fulfilment_done" name="Доставлено">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Доставлено"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f4" sourceRef="Fulfilment_state" targetRef="Fulfilment_delay" name="Задержка / неизвестно / в пути">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Задержка / неизвестно / в пути"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f5" sourceRef="Fulfilment_delay" targetRef="Fulfilment_wait"/>
+    <bpmn:sequenceFlow id="Fulfilment_f6" sourceRef="Fulfilment_wait" targetRef="Fulfilment_delivery"/>
+    <bpmn:sequenceFlow id="Fulfilment_f7" sourceRef="Fulfilment_state" targetRef="Fulfilment_cancel" name="Отмена / доставка невозможна">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Отмена / доставка невозможна"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f8" sourceRef="Fulfilment_cancel" targetRef="Fulfilment_can"/>
+    <bpmn:sequenceFlow id="Fulfilment_f9" sourceRef="Fulfilment_can" targetRef="Fulfilment_allowed"/>
+    <bpmn:sequenceFlow id="Fulfilment_f10" sourceRef="Fulfilment_allowed" targetRef="Fulfilment_delivery" name="Нет">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f11" sourceRef="Fulfilment_allowed" targetRef="Fulfilment_refund" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f12" sourceRef="Fulfilment_refund" targetRef="Fulfilment_notice"/>
+    <bpmn:sequenceFlow id="Fulfilment_f13" sourceRef="Fulfilment_notice" targetRef="Fulfilment_refundwait"/>
+    <bpmn:sequenceFlow id="Fulfilment_f14" sourceRef="Fulfilment_refundwait" targetRef="Fulfilment_refundstatus"/>
+    <bpmn:sequenceFlow id="Fulfilment_f15" sourceRef="Fulfilment_refundstatus" targetRef="Fulfilment_refunded"/>
+    <bpmn:sequenceFlow id="Fulfilment_f16" sourceRef="Fulfilment_refunded" targetRef="Fulfilment_end" name="Да">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Да"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f17" sourceRef="Fulfilment_refunded" targetRef="Fulfilment_pending" name="Нет / неизвестно">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">outcome = "Нет / неизвестно"</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="Fulfilment_f18" sourceRef="Fulfilment_pending" targetRef="Fulfilment_refundwait"/>
+  </bpmn:process>
+  <bpmn:collaboration id="Fulfilment_collab">
+    <bpmn:participant id="Fulfilment_pool" name="05 · Сборка, доставка, отмена и возврат" processRef="Fulfilment"/>
+    <bpmn:participant id="Fulfilment_courier" name="Внешняя служба доставки"/>
+    <bpmn:messageFlow id="Fulfilment_m0" sourceRef="Fulfilment_delivery" targetRef="Fulfilment_courier" name="Заказ / запрос статуса"/>
+    <bpmn:messageFlow id="Fulfilment_m1" sourceRef="Fulfilment_courier" targetRef="Fulfilment_delivery" name="Подтверждённый статус"/>
+  </bpmn:collaboration>
+  <bpmndi:BPMNDiagram id="Order_diagram" name="Интернет-аптека · Заказ от поиска до доставки">
+    <bpmndi:BPMNPlane id="Order_plane" bpmnElement="Order_collab">
+      <bpmndi:BPMNShape id="Order_pool_di" bpmnElement="Order_pool" isHorizontal="true">
+        <dc:Bounds x="0" y="40" width="2842" height="930"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_lane0_di" bpmnElement="Order_lane0" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="2812" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_lane1_di" bpmnElement="Order_lane1" isHorizontal="true">
+        <dc:Bounds x="30" y="350" width="2812" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_lane2_di" bpmnElement="Order_lane2" isHorizontal="true">
+        <dc:Bounds x="30" y="660" width="2812" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_start_di" bpmnElement="Order_start">
+        <dc:Bounds x="130" y="172.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="82" y="222.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_catalog_di" bpmnElement="Order_catalog">
+        <dc:Bounds x="385" y="150.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_hascart_di" bpmnElement="Order_hascart">
+        <dc:Bounds x="640" y="166.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="592" y="228.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_eligible_di" bpmnElement="Order_eligible">
+        <dc:Bounds x="895" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_allowed_di" bpmnElement="Order_allowed">
+        <dc:Bounds x="1150" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1102" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_stop_di" bpmnElement="Order_stop">
+        <dc:Bounds x="1405" y="112.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1357" y="162.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_checkout_di" bpmnElement="Order_checkout">
+        <dc:Bounds x="1405" y="245.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_ready_di" bpmnElement="Order_ready">
+        <dc:Bounds x="1660" y="261.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1612" y="323.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_exit_di" bpmnElement="Order_exit">
+        <dc:Bounds x="1915" y="112.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1867" y="162.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_pay_di" bpmnElement="Order_pay">
+        <dc:Bounds x="1915" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_paid_di" bpmnElement="Order_paid">
+        <dc:Bounds x="2170" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2122" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_pending_di" bpmnElement="Order_pending">
+        <dc:Bounds x="2425" y="792.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2377" y="842.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_fulfil_di" bpmnElement="Order_fulfil">
+        <dc:Bounds x="2425" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Order_end_di" bpmnElement="Order_end">
+        <dc:Bounds x="2680" y="482.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2632" y="532.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Order_f0_di" bpmnElement="Order_f0">
+        <di:waypoint x="172" y="193.0"/>
+        <di:waypoint x="385" y="193.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f1_di" bpmnElement="Order_f1">
+        <di:waypoint x="571" y="193.0"/>
+        <di:waypoint x="640" y="193.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f2_di" bpmnElement="Order_f2">
+        <di:waypoint x="694" y="193.0"/>
+        <di:waypoint x="875" y="193.0"/>
+        <di:waypoint x="875" y="503.0"/>
+        <di:waypoint x="895" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="820.0" y="310.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f3_di" bpmnElement="Order_f3">
+        <di:waypoint x="694" y="193.0"/>
+        <di:waypoint x="714" y="193.0"/>
+        <di:waypoint x="714" y="99.0"/>
+        <di:waypoint x="1895" y="99.0"/>
+        <di:waypoint x="1895" y="133.0"/>
+        <di:waypoint x="1915" y="133.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1249.5" y="61.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f4_di" bpmnElement="Order_f4">
+        <di:waypoint x="1081" y="503.0"/>
+        <di:waypoint x="1150" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f5_di" bpmnElement="Order_f5">
+        <di:waypoint x="1204" y="503.0"/>
+        <di:waypoint x="1224" y="503.0"/>
+        <di:waypoint x="1224" y="133.0"/>
+        <di:waypoint x="1405" y="133.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1169.0" y="280.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f6_di" bpmnElement="Order_f6">
+        <di:waypoint x="1204" y="503.0"/>
+        <di:waypoint x="1224" y="503.0"/>
+        <di:waypoint x="1224" y="288.0"/>
+        <di:waypoint x="1405" y="288.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1169.0" y="357.5" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f7_di" bpmnElement="Order_f7">
+        <di:waypoint x="1591" y="288.0"/>
+        <di:waypoint x="1660" y="288.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f8_di" bpmnElement="Order_f8">
+        <di:waypoint x="1714" y="288.0"/>
+        <di:waypoint x="1734" y="288.0"/>
+        <di:waypoint x="1734" y="133.0"/>
+        <di:waypoint x="1915" y="133.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1769.5" y="95.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f9_di" bpmnElement="Order_f9">
+        <di:waypoint x="1714" y="288.0"/>
+        <di:waypoint x="1895" y="288.0"/>
+        <di:waypoint x="1895" y="503.0"/>
+        <di:waypoint x="1915" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1840.0" y="357.5" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f10_di" bpmnElement="Order_f10">
+        <di:waypoint x="2101" y="503.0"/>
+        <di:waypoint x="2170" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f11_di" bpmnElement="Order_f11">
+        <di:waypoint x="2224" y="503.0"/>
+        <di:waypoint x="2405" y="503.0"/>
+        <di:waypoint x="2405" y="813.0"/>
+        <di:waypoint x="2425" y="813.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2350.0" y="620.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f12_di" bpmnElement="Order_f12">
+        <di:waypoint x="2224" y="503.0"/>
+        <di:waypoint x="2425" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2269.5" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Order_f13_di" bpmnElement="Order_f13">
+        <di:waypoint x="2611" y="503.0"/>
+        <di:waypoint x="2680" y="503.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Catalog_diagram" name="01 · Поиск и корзина">
+    <bpmndi:BPMNPlane id="Catalog_plane" bpmnElement="Catalog_collab">
+      <bpmndi:BPMNShape id="Catalog_pool_di" bpmnElement="Catalog_pool" isHorizontal="true">
+        <dc:Bounds x="0" y="40" width="2332" height="930"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_lane0_di" bpmnElement="Catalog_lane0" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="2302" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_lane1_di" bpmnElement="Catalog_lane1" isHorizontal="true">
+        <dc:Bounds x="30" y="350" width="2302" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_lane2_di" bpmnElement="Catalog_lane2" isHorizontal="true">
+        <dc:Bounds x="30" y="660" width="2302" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_start_di" bpmnElement="Catalog_start">
+        <dc:Bounds x="130" y="172.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="82" y="222.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_query_di" bpmnElement="Catalog_query">
+        <dc:Bounds x="385" y="150.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_search_di" bpmnElement="Catalog_search">
+        <dc:Bounds x="640" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_found_di" bpmnElement="Catalog_found">
+        <dc:Bounds x="895" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="847" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_empty_di" bpmnElement="Catalog_empty">
+        <dc:Bounds x="1150" y="100.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_retry_di" bpmnElement="Catalog_retry">
+        <dc:Bounds x="1150" y="255.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_choice_di" bpmnElement="Catalog_choice">
+        <dc:Bounds x="1405" y="271.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1357" y="333.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_exit_di" bpmnElement="Catalog_exit">
+        <dc:Bounds x="1660" y="277.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1612" y="327.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_product_di" bpmnElement="Catalog_product">
+        <dc:Bounds x="1660" y="100.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_cart_di" bpmnElement="Catalog_cart">
+        <dc:Bounds x="1915" y="100.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Catalog_end_di" bpmnElement="Catalog_end">
+        <dc:Bounds x="2170" y="122.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2122" y="172.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Catalog_f0_di" bpmnElement="Catalog_f0">
+        <di:waypoint x="172" y="193.0"/>
+        <di:waypoint x="385" y="193.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f1_di" bpmnElement="Catalog_f1">
+        <di:waypoint x="571" y="193.0"/>
+        <di:waypoint x="591" y="193.0"/>
+        <di:waypoint x="591" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f2_di" bpmnElement="Catalog_f2">
+        <di:waypoint x="826" y="503.0"/>
+        <di:waypoint x="895" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f3_di" bpmnElement="Catalog_f3">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="1599" y="503.0"/>
+        <di:waypoint x="1599" y="143.0"/>
+        <di:waypoint x="1660" y="143.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1219.0" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f4_di" bpmnElement="Catalog_f4">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="969" y="143.0"/>
+        <di:waypoint x="1150" y="143.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914.0" y="285.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f5_di" bpmnElement="Catalog_f5">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="969" y="298.0"/>
+        <di:waypoint x="1150" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914.0" y="362.5" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f6_di" bpmnElement="Catalog_f6">
+        <di:waypoint x="1336" y="143.0"/>
+        <di:waypoint x="1356" y="143.0"/>
+        <di:waypoint x="1356" y="87.0"/>
+        <di:waypoint x="365" y="87.0"/>
+        <di:waypoint x="365" y="193.0"/>
+        <di:waypoint x="385" y="193.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f7_di" bpmnElement="Catalog_f7">
+        <di:waypoint x="1336" y="298.0"/>
+        <di:waypoint x="1405" y="298.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f8_di" bpmnElement="Catalog_f8">
+        <di:waypoint x="1459" y="298.0"/>
+        <di:waypoint x="1520" y="298.0"/>
+        <di:waypoint x="1520" y="447.0"/>
+        <di:waypoint x="620" y="447.0"/>
+        <di:waypoint x="620" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1015.0" y="409.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f9_di" bpmnElement="Catalog_f9">
+        <di:waypoint x="1459" y="298.0"/>
+        <di:waypoint x="1660" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1504.5" y="260.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f10_di" bpmnElement="Catalog_f10">
+        <di:waypoint x="1846" y="143.0"/>
+        <di:waypoint x="1915" y="143.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Catalog_f11_di" bpmnElement="Catalog_f11">
+        <di:waypoint x="2101" y="143.0"/>
+        <di:waypoint x="2170" y="143.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Eligibility_diagram" name="02 · Наличие и рецептурные ограничения">
+    <bpmndi:BPMNPlane id="Eligibility_plane" bpmnElement="Eligibility_collab">
+      <bpmndi:BPMNShape id="Eligibility_pool_di" bpmnElement="Eligibility_pool" isHorizontal="true">
+        <dc:Bounds x="0" y="40" width="2842" height="930"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_lane0_di" bpmnElement="Eligibility_lane0" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="2812" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_lane1_di" bpmnElement="Eligibility_lane1" isHorizontal="true">
+        <dc:Bounds x="30" y="350" width="2812" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_lane2_di" bpmnElement="Eligibility_lane2" isHorizontal="true">
+        <dc:Bounds x="30" y="660" width="2812" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_start_di" bpmnElement="Eligibility_start">
+        <dc:Bounds x="130" y="172.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="82" y="222.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_check_di" bpmnElement="Eligibility_check">
+        <dc:Bounds x="385" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_ok_di" bpmnElement="Eligibility_ok">
+        <dc:Bounds x="640" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="592" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_edit_di" bpmnElement="Eligibility_edit">
+        <dc:Bounds x="895" y="110.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_again_di" bpmnElement="Eligibility_again">
+        <dc:Bounds x="1150" y="126.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1102" y="188.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_no_di" bpmnElement="Eligibility_no">
+        <dc:Bounds x="1660" y="132.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1612" y="182.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_rx_di" bpmnElement="Eligibility_rx">
+        <dc:Bounds x="895" y="581.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="847" y="643.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_upload_di" bpmnElement="Eligibility_upload">
+        <dc:Bounds x="1405" y="255.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_review_di" bpmnElement="Eligibility_review">
+        <dc:Bounds x="1660" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_result_di" bpmnElement="Eligibility_result">
+        <dc:Bounds x="1915" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1867" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_fix_di" bpmnElement="Eligibility_fix">
+        <dc:Bounds x="2170" y="110.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_fixgo_di" bpmnElement="Eligibility_fixgo">
+        <dc:Bounds x="2425" y="126.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2377" y="188.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_wait_di" bpmnElement="Eligibility_wait">
+        <dc:Bounds x="2170" y="792.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2122" y="842.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Eligibility_yes_di" bpmnElement="Eligibility_yes">
+        <dc:Bounds x="2680" y="482.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2632" y="532.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Eligibility_f0_di" bpmnElement="Eligibility_f0">
+        <di:waypoint x="172" y="193.0"/>
+        <di:waypoint x="365" y="193.0"/>
+        <di:waypoint x="365" y="503.0"/>
+        <di:waypoint x="385" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f1_di" bpmnElement="Eligibility_f1">
+        <di:waypoint x="571" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f2_di" bpmnElement="Eligibility_f2">
+        <di:waypoint x="694" y="503.0"/>
+        <di:waypoint x="714" y="503.0"/>
+        <di:waypoint x="714" y="153.0"/>
+        <di:waypoint x="895" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="659.0" y="290.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f3_di" bpmnElement="Eligibility_f3">
+        <di:waypoint x="1081" y="153.0"/>
+        <di:waypoint x="1150" y="153.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f4_di" bpmnElement="Eligibility_f4">
+        <di:waypoint x="1204" y="153.0"/>
+        <di:waypoint x="1265" y="153.0"/>
+        <di:waypoint x="1265" y="447.0"/>
+        <di:waypoint x="365" y="447.0"/>
+        <di:waypoint x="365" y="503.0"/>
+        <di:waypoint x="385" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="760.0" y="409.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f5_di" bpmnElement="Eligibility_f5">
+        <di:waypoint x="1204" y="153.0"/>
+        <di:waypoint x="1660" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1377.0" y="115.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f6_di" bpmnElement="Eligibility_f6">
+        <di:waypoint x="694" y="503.0"/>
+        <di:waypoint x="875" y="503.0"/>
+        <di:waypoint x="875" y="608.0"/>
+        <di:waypoint x="895" y="608.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="729.5" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f7_di" bpmnElement="Eligibility_f7">
+        <di:waypoint x="949" y="608.0"/>
+        <di:waypoint x="2619" y="608.0"/>
+        <di:waypoint x="2619" y="503.0"/>
+        <di:waypoint x="2680" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1729.0" y="570.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f8_di" bpmnElement="Eligibility_f8">
+        <di:waypoint x="949" y="608.0"/>
+        <di:waypoint x="969" y="608.0"/>
+        <di:waypoint x="969" y="298.0"/>
+        <di:waypoint x="1405" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1132.0" y="260.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f9_di" bpmnElement="Eligibility_f9">
+        <di:waypoint x="949" y="608.0"/>
+        <di:waypoint x="2150" y="608.0"/>
+        <di:waypoint x="2150" y="153.0"/>
+        <di:waypoint x="2170" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1494.5" y="570.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f10_di" bpmnElement="Eligibility_f10">
+        <di:waypoint x="1591" y="298.0"/>
+        <di:waypoint x="1611" y="298.0"/>
+        <di:waypoint x="1611" y="503.0"/>
+        <di:waypoint x="1660" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f11_di" bpmnElement="Eligibility_f11">
+        <di:waypoint x="1846" y="503.0"/>
+        <di:waypoint x="1915" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f12_di" bpmnElement="Eligibility_f12">
+        <di:waypoint x="1969" y="503.0"/>
+        <di:waypoint x="2680" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2269.5" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f13_di" bpmnElement="Eligibility_f13">
+        <di:waypoint x="1969" y="503.0"/>
+        <di:waypoint x="1989" y="503.0"/>
+        <di:waypoint x="1989" y="153.0"/>
+        <di:waypoint x="2170" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1934.0" y="290.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f14_di" bpmnElement="Eligibility_f14">
+        <di:waypoint x="1969" y="503.0"/>
+        <di:waypoint x="2150" y="503.0"/>
+        <di:waypoint x="2150" y="813.0"/>
+        <di:waypoint x="2170" y="813.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2095.0" y="620.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f15_di" bpmnElement="Eligibility_f15">
+        <di:waypoint x="2212" y="813.0"/>
+        <di:waypoint x="2232" y="813.0"/>
+        <di:waypoint x="2232" y="607.0"/>
+        <di:waypoint x="1640" y="607.0"/>
+        <di:waypoint x="1640" y="503.0"/>
+        <di:waypoint x="1660" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f16_di" bpmnElement="Eligibility_f16">
+        <di:waypoint x="2356" y="153.0"/>
+        <di:waypoint x="2425" y="153.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f17_di" bpmnElement="Eligibility_f17">
+        <di:waypoint x="2479" y="153.0"/>
+        <di:waypoint x="2499" y="153.0"/>
+        <di:waypoint x="2499" y="97.0"/>
+        <di:waypoint x="1385" y="97.0"/>
+        <di:waypoint x="1385" y="298.0"/>
+        <di:waypoint x="1405" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1887.0" y="59.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Eligibility_f18_di" bpmnElement="Eligibility_f18">
+        <di:waypoint x="2479" y="153.0"/>
+        <di:waypoint x="2499" y="153.0"/>
+        <di:waypoint x="2499" y="97.0"/>
+        <di:waypoint x="1640" y="97.0"/>
+        <di:waypoint x="1640" y="153.0"/>
+        <di:waypoint x="1660" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2444.0" y="87.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Checkout_diagram" name="03 · Адрес, доставка и итоговая проверка">
+    <bpmndi:BPMNPlane id="Checkout_plane" bpmnElement="Checkout_collab">
+      <bpmndi:BPMNShape id="Checkout_pool_di" bpmnElement="Checkout_pool" isHorizontal="true">
+        <dc:Bounds x="0" y="40" width="3352" height="930"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_lane0_di" bpmnElement="Checkout_lane0" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="3322" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_lane1_di" bpmnElement="Checkout_lane1" isHorizontal="true">
+        <dc:Bounds x="30" y="350" width="3322" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_lane2_di" bpmnElement="Checkout_lane2" isHorizontal="true">
+        <dc:Bounds x="30" y="660" width="3322" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_start_di" bpmnElement="Checkout_start">
+        <dc:Bounds x="130" y="172.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="82" y="222.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_address_di" bpmnElement="Checkout_address">
+        <dc:Bounds x="385" y="150.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_validate_di" bpmnElement="Checkout_validate">
+        <dc:Bounds x="640" y="770.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_valid_di" bpmnElement="Checkout_valid">
+        <dc:Bounds x="895" y="786.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="847" y="848.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_error_di" bpmnElement="Checkout_error">
+        <dc:Bounds x="1150" y="110.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_delivery_di" bpmnElement="Checkout_delivery">
+        <dc:Bounds x="1150" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_available_di" bpmnElement="Checkout_available">
+        <dc:Bounds x="1405" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1357" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_change_di" bpmnElement="Checkout_change">
+        <dc:Bounds x="1660" y="110.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_changego_di" bpmnElement="Checkout_changego">
+        <dc:Bounds x="1915" y="126.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1867" y="188.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_cancel_di" bpmnElement="Checkout_cancel">
+        <dc:Bounds x="2680" y="132.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2632" y="182.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_select_di" bpmnElement="Checkout_select">
+        <dc:Bounds x="1660" y="255.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_total_di" bpmnElement="Checkout_total">
+        <dc:Bounds x="1915" y="770.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_review_di" bpmnElement="Checkout_review">
+        <dc:Bounds x="2170" y="255.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_session_di" bpmnElement="Checkout_session">
+        <dc:Bounds x="2425" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_state_di" bpmnElement="Checkout_state">
+        <dc:Bounds x="2680" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2632" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_login_di" bpmnElement="Checkout_login">
+        <dc:Bounds x="2935" y="110.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Checkout_ready_di" bpmnElement="Checkout_ready">
+        <dc:Bounds x="3190" y="482.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3142" y="532.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Checkout_f0_di" bpmnElement="Checkout_f0">
+        <di:waypoint x="172" y="193.0"/>
+        <di:waypoint x="385" y="193.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f1_di" bpmnElement="Checkout_f1">
+        <di:waypoint x="571" y="193.0"/>
+        <di:waypoint x="591" y="193.0"/>
+        <di:waypoint x="591" y="813.0"/>
+        <di:waypoint x="640" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f2_di" bpmnElement="Checkout_f2">
+        <di:waypoint x="826" y="813.0"/>
+        <di:waypoint x="895" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f3_di" bpmnElement="Checkout_f3">
+        <di:waypoint x="949" y="813.0"/>
+        <di:waypoint x="969" y="813.0"/>
+        <di:waypoint x="969" y="153.0"/>
+        <di:waypoint x="1150" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914.0" y="445.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f4_di" bpmnElement="Checkout_f4">
+        <di:waypoint x="1336" y="153.0"/>
+        <di:waypoint x="1356" y="153.0"/>
+        <di:waypoint x="1356" y="249.0"/>
+        <di:waypoint x="365" y="249.0"/>
+        <di:waypoint x="365" y="193.0"/>
+        <di:waypoint x="385" y="193.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f5_di" bpmnElement="Checkout_f5">
+        <di:waypoint x="949" y="813.0"/>
+        <di:waypoint x="969" y="813.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="1150" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914.0" y="620.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f6_di" bpmnElement="Checkout_f6">
+        <di:waypoint x="1336" y="503.0"/>
+        <di:waypoint x="1405" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f7_di" bpmnElement="Checkout_f7">
+        <di:waypoint x="1459" y="503.0"/>
+        <di:waypoint x="1479" y="503.0"/>
+        <di:waypoint x="1479" y="298.0"/>
+        <di:waypoint x="1660" y="298.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1424.0" y="362.5" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f8_di" bpmnElement="Checkout_f8">
+        <di:waypoint x="1459" y="503.0"/>
+        <di:waypoint x="1479" y="503.0"/>
+        <di:waypoint x="1479" y="153.0"/>
+        <di:waypoint x="1660" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1424.0" y="290.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f9_di" bpmnElement="Checkout_f9">
+        <di:waypoint x="1846" y="153.0"/>
+        <di:waypoint x="1915" y="153.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f10_di" bpmnElement="Checkout_f10">
+        <di:waypoint x="1969" y="153.0"/>
+        <di:waypoint x="1989" y="153.0"/>
+        <di:waypoint x="1989" y="97.0"/>
+        <di:waypoint x="365" y="97.0"/>
+        <di:waypoint x="365" y="193.0"/>
+        <di:waypoint x="385" y="193.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1122.0" y="59.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f11_di" bpmnElement="Checkout_f11">
+        <di:waypoint x="1969" y="153.0"/>
+        <di:waypoint x="2680" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2269.5" y="115.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f12_di" bpmnElement="Checkout_f12">
+        <di:waypoint x="1846" y="298.0"/>
+        <di:waypoint x="1866" y="298.0"/>
+        <di:waypoint x="1866" y="813.0"/>
+        <di:waypoint x="1915" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f13_di" bpmnElement="Checkout_f13">
+        <di:waypoint x="2101" y="813.0"/>
+        <di:waypoint x="2121" y="813.0"/>
+        <di:waypoint x="2121" y="298.0"/>
+        <di:waypoint x="2170" y="298.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f14_di" bpmnElement="Checkout_f14">
+        <di:waypoint x="2356" y="298.0"/>
+        <di:waypoint x="2376" y="298.0"/>
+        <di:waypoint x="2376" y="503.0"/>
+        <di:waypoint x="2425" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f15_di" bpmnElement="Checkout_f15">
+        <di:waypoint x="2611" y="503.0"/>
+        <di:waypoint x="2680" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f16_di" bpmnElement="Checkout_f16">
+        <di:waypoint x="2734" y="503.0"/>
+        <di:waypoint x="3190" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2907.0" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f17_di" bpmnElement="Checkout_f17">
+        <di:waypoint x="2734" y="503.0"/>
+        <di:waypoint x="2915" y="503.0"/>
+        <di:waypoint x="2915" y="153.0"/>
+        <di:waypoint x="2935" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2860.0" y="290.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f18_di" bpmnElement="Checkout_f18">
+        <di:waypoint x="2734" y="503.0"/>
+        <di:waypoint x="2754" y="503.0"/>
+        <di:waypoint x="2754" y="354.0"/>
+        <di:waypoint x="1640" y="354.0"/>
+        <di:waypoint x="1640" y="153.0"/>
+        <di:waypoint x="1660" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2205.0" y="360.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f19_di" bpmnElement="Checkout_f19">
+        <di:waypoint x="2734" y="503.0"/>
+        <di:waypoint x="2754" y="503.0"/>
+        <di:waypoint x="2754" y="354.0"/>
+        <di:waypoint x="1640" y="354.0"/>
+        <di:waypoint x="1640" y="153.0"/>
+        <di:waypoint x="1660" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1585.0" y="215.5" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Checkout_f20_di" bpmnElement="Checkout_f20">
+        <di:waypoint x="3121" y="153.0"/>
+        <di:waypoint x="3141" y="153.0"/>
+        <di:waypoint x="3141" y="447.0"/>
+        <di:waypoint x="2405" y="447.0"/>
+        <di:waypoint x="2405" y="503.0"/>
+        <di:waypoint x="2425" y="503.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Payment_diagram" name="04 · Идемпотентная оплата и создание заказа">
+    <bpmndi:BPMNPlane id="Payment_plane" bpmnElement="Payment_collab">
+      <bpmndi:BPMNShape id="Payment_pool_di" bpmnElement="Payment_pool" isHorizontal="true">
+        <dc:Bounds x="0" y="40" width="3607" height="930"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_lane0_di" bpmnElement="Payment_lane0" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="3577" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_lane1_di" bpmnElement="Payment_lane1" isHorizontal="true">
+        <dc:Bounds x="30" y="350" width="3577" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_lane2_di" bpmnElement="Payment_lane2" isHorizontal="true">
+        <dc:Bounds x="30" y="660" width="3577" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_start_di" bpmnElement="Payment_start">
+        <dc:Bounds x="130" y="172.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="82" y="222.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_key_di" bpmnElement="Payment_key">
+        <dc:Bounds x="385" y="770.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_pay_di" bpmnElement="Payment_pay">
+        <dc:Bounds x="640" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_result_di" bpmnElement="Payment_result">
+        <dc:Bounds x="895" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="847" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_decline_di" bpmnElement="Payment_decline">
+        <dc:Bounds x="1150" y="110.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_retry_di" bpmnElement="Payment_retry">
+        <dc:Bounds x="1405" y="126.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1357" y="188.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_new_di" bpmnElement="Payment_new">
+        <dc:Bounds x="1660" y="750.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_exit_di" bpmnElement="Payment_exit">
+        <dc:Bounds x="1915" y="132.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1867" y="182.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_unknown_di" bpmnElement="Payment_unknown">
+        <dc:Bounds x="1150" y="880.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_timer_di" bpmnElement="Payment_timer">
+        <dc:Bounds x="1405" y="902.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1357" y="952.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_status_di" bpmnElement="Payment_status">
+        <dc:Bounds x="1660" y="550.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_known_di" bpmnElement="Payment_known">
+        <dc:Bounds x="1915" y="566.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1867" y="628.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_pending_di" bpmnElement="Payment_pending">
+        <dc:Bounds x="2170" y="902.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2122" y="952.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_persist_di" bpmnElement="Payment_persist">
+        <dc:Bounds x="2170" y="410.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_saved_di" bpmnElement="Payment_saved">
+        <dc:Bounds x="2425" y="426.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2377" y="488.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_reconcile_di" bpmnElement="Payment_reconcile">
+        <dc:Bounds x="2680" y="560.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_recovered_di" bpmnElement="Payment_recovered">
+        <dc:Bounds x="2935" y="576.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2887" y="638.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_success_di" bpmnElement="Payment_success">
+        <dc:Bounds x="3190" y="750.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Payment_end_di" bpmnElement="Payment_end">
+        <dc:Bounds x="3445" y="772.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3397" y="822.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Payment_f0_di" bpmnElement="Payment_f0">
+        <di:waypoint x="172" y="193.0"/>
+        <di:waypoint x="365" y="193.0"/>
+        <di:waypoint x="365" y="813.0"/>
+        <di:waypoint x="385" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f1_di" bpmnElement="Payment_f1">
+        <di:waypoint x="571" y="813.0"/>
+        <di:waypoint x="591" y="813.0"/>
+        <di:waypoint x="591" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f2_di" bpmnElement="Payment_f2">
+        <di:waypoint x="826" y="503.0"/>
+        <di:waypoint x="895" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f3_di" bpmnElement="Payment_f3">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="969" y="453.0"/>
+        <di:waypoint x="2170" y="453.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1514.5" y="415.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f4_di" bpmnElement="Payment_f4">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="969" y="153.0"/>
+        <di:waypoint x="1150" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="914.0" y="290.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f5_di" bpmnElement="Payment_f5">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="1130" y="503.0"/>
+        <di:waypoint x="1130" y="923.0"/>
+        <di:waypoint x="1150" y="923.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1075.0" y="675.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f6_di" bpmnElement="Payment_f6">
+        <di:waypoint x="1336" y="153.0"/>
+        <di:waypoint x="1405" y="153.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f7_di" bpmnElement="Payment_f7">
+        <di:waypoint x="1459" y="153.0"/>
+        <di:waypoint x="1640" y="153.0"/>
+        <di:waypoint x="1640" y="793.0"/>
+        <di:waypoint x="1660" y="793.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1648.0" y="479.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f8_di" bpmnElement="Payment_f8">
+        <di:waypoint x="1459" y="153.0"/>
+        <di:waypoint x="1915" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1632.0" y="115.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f9_di" bpmnElement="Payment_f9">
+        <di:waypoint x="1846" y="793.0"/>
+        <di:waypoint x="1866" y="793.0"/>
+        <di:waypoint x="1866" y="697.0"/>
+        <di:waypoint x="620" y="697.0"/>
+        <di:waypoint x="620" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f10_di" bpmnElement="Payment_f10">
+        <di:waypoint x="1336" y="923.0"/>
+        <di:waypoint x="1405" y="923.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f11_di" bpmnElement="Payment_f11">
+        <di:waypoint x="1447" y="923.0"/>
+        <di:waypoint x="1467" y="923.0"/>
+        <di:waypoint x="1467" y="593.0"/>
+        <di:waypoint x="1660" y="593.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f12_di" bpmnElement="Payment_f12">
+        <di:waypoint x="1846" y="593.0"/>
+        <di:waypoint x="1915" y="593.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f13_di" bpmnElement="Payment_f13">
+        <di:waypoint x="1969" y="593.0"/>
+        <di:waypoint x="1989" y="593.0"/>
+        <di:waypoint x="1989" y="453.0"/>
+        <di:waypoint x="2170" y="453.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2024.5" y="415.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f14_di" bpmnElement="Payment_f14">
+        <di:waypoint x="1969" y="593.0"/>
+        <di:waypoint x="1989" y="593.0"/>
+        <di:waypoint x="1989" y="257.0"/>
+        <di:waypoint x="1130" y="257.0"/>
+        <di:waypoint x="1130" y="153.0"/>
+        <di:waypoint x="1150" y="153.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1567.5" y="263.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f15_di" bpmnElement="Payment_f15">
+        <di:waypoint x="1969" y="593.0"/>
+        <di:waypoint x="2150" y="593.0"/>
+        <di:waypoint x="2150" y="923.0"/>
+        <di:waypoint x="2170" y="923.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2095.0" y="720.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f16_di" bpmnElement="Payment_f16">
+        <di:waypoint x="2356" y="453.0"/>
+        <di:waypoint x="2425" y="453.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f17_di" bpmnElement="Payment_f17">
+        <di:waypoint x="2479" y="453.0"/>
+        <di:waypoint x="3170" y="453.0"/>
+        <di:waypoint x="3170" y="793.0"/>
+        <di:waypoint x="3190" y="793.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2769.5" y="415.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f18_di" bpmnElement="Payment_f18">
+        <di:waypoint x="2479" y="453.0"/>
+        <di:waypoint x="2660" y="453.0"/>
+        <di:waypoint x="2660" y="603.0"/>
+        <di:waypoint x="2680" y="603.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2514.5" y="415.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f19_di" bpmnElement="Payment_f19">
+        <di:waypoint x="2866" y="603.0"/>
+        <di:waypoint x="2935" y="603.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f20_di" bpmnElement="Payment_f20">
+        <di:waypoint x="2989" y="603.0"/>
+        <di:waypoint x="3170" y="603.0"/>
+        <di:waypoint x="3170" y="793.0"/>
+        <di:waypoint x="3190" y="793.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3115.0" y="660.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f21_di" bpmnElement="Payment_f21">
+        <di:waypoint x="2989" y="603.0"/>
+        <di:waypoint x="3050" y="603.0"/>
+        <di:waypoint x="3050" y="889.0"/>
+        <di:waypoint x="2150" y="889.0"/>
+        <di:waypoint x="2150" y="923.0"/>
+        <di:waypoint x="2170" y="923.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2545.0" y="851.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_f22_di" bpmnElement="Payment_f22">
+        <di:waypoint x="3376" y="793.0"/>
+        <di:waypoint x="3445" y="793.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Payment_provider_di" bpmnElement="Payment_provider" isHorizontal="true">
+        <dc:Bounds x="100" y="1030" width="560" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Payment_m0_di" bpmnElement="Payment_m0">
+        <di:waypoint x="733.0" y="546.0"/>
+        <di:waypoint x="733.0" y="1000"/>
+        <di:waypoint x="380" y="1000"/>
+        <di:waypoint x="380" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Payment_m1_di" bpmnElement="Payment_m1">
+        <di:waypoint x="380" y="1030"/>
+        <di:waypoint x="380" y="1000"/>
+        <di:waypoint x="1753.0" y="1000"/>
+        <di:waypoint x="1753.0" y="636.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+  <bpmndi:BPMNDiagram id="Fulfilment_diagram" name="05 · Сборка, доставка, отмена и возврат">
+    <bpmndi:BPMNPlane id="Fulfilment_plane" bpmnElement="Fulfilment_collab">
+      <bpmndi:BPMNShape id="Fulfilment_pool_di" bpmnElement="Fulfilment_pool" isHorizontal="true">
+        <dc:Bounds x="0" y="40" width="3862" height="930"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_lane0_di" bpmnElement="Fulfilment_lane0" isHorizontal="true">
+        <dc:Bounds x="30" y="40" width="3832" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_lane1_di" bpmnElement="Fulfilment_lane1" isHorizontal="true">
+        <dc:Bounds x="30" y="350" width="3832" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_lane2_di" bpmnElement="Fulfilment_lane2" isHorizontal="true">
+        <dc:Bounds x="30" y="660" width="3832" height="310"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_start_di" bpmnElement="Fulfilment_start">
+        <dc:Bounds x="130" y="482.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="82" y="532.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_pack_di" bpmnElement="Fulfilment_pack">
+        <dc:Bounds x="385" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_delivery_di" bpmnElement="Fulfilment_delivery">
+        <dc:Bounds x="640" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_state_di" bpmnElement="Fulfilment_state">
+        <dc:Bounds x="895" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="847" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_done_di" bpmnElement="Fulfilment_done">
+        <dc:Bounds x="1150" y="442.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1102" y="492.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_delay_di" bpmnElement="Fulfilment_delay">
+        <dc:Bounds x="1150" y="770.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_wait_di" bpmnElement="Fulfilment_wait">
+        <dc:Bounds x="1405" y="792.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1357" y="842.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_cancel_di" bpmnElement="Fulfilment_cancel">
+        <dc:Bounds x="1405" y="150.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_can_di" bpmnElement="Fulfilment_can">
+        <dc:Bounds x="1660" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_allowed_di" bpmnElement="Fulfilment_allowed">
+        <dc:Bounds x="1915" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1867" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_refund_di" bpmnElement="Fulfilment_refund">
+        <dc:Bounds x="2170" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_notice_di" bpmnElement="Fulfilment_notice">
+        <dc:Bounds x="2425" y="770.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_refundwait_di" bpmnElement="Fulfilment_refundwait">
+        <dc:Bounds x="2680" y="792.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2632" y="842.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_refundstatus_di" bpmnElement="Fulfilment_refundstatus">
+        <dc:Bounds x="2935" y="460.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_refunded_di" bpmnElement="Fulfilment_refunded">
+        <dc:Bounds x="3190" y="476.0" width="54" height="54"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3142" y="538.0" width="150" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_pending_di" bpmnElement="Fulfilment_pending">
+        <dc:Bounds x="3445" y="150.0" width="186" height="86"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Fulfilment_end_di" bpmnElement="Fulfilment_end">
+        <dc:Bounds x="3700" y="482.0" width="42" height="42"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3652" y="532.0" width="138" height="56"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fulfilment_f0_di" bpmnElement="Fulfilment_f0">
+        <di:waypoint x="172" y="503.0"/>
+        <di:waypoint x="385" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f1_di" bpmnElement="Fulfilment_f1">
+        <di:waypoint x="571" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f2_di" bpmnElement="Fulfilment_f2">
+        <di:waypoint x="826" y="503.0"/>
+        <di:waypoint x="895" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f3_di" bpmnElement="Fulfilment_f3">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="969" y="463.0"/>
+        <di:waypoint x="1150" y="463.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1004.5" y="425.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f4_di" bpmnElement="Fulfilment_f4">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="1089" y="503.0"/>
+        <di:waypoint x="1089" y="813.0"/>
+        <di:waypoint x="1150" y="813.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1034.0" y="620.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f5_di" bpmnElement="Fulfilment_f5">
+        <di:waypoint x="1336" y="813.0"/>
+        <di:waypoint x="1405" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f6_di" bpmnElement="Fulfilment_f6">
+        <di:waypoint x="1447" y="813.0"/>
+        <di:waypoint x="1467" y="813.0"/>
+        <di:waypoint x="1467" y="607.0"/>
+        <di:waypoint x="620" y="607.0"/>
+        <di:waypoint x="620" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f7_di" bpmnElement="Fulfilment_f7">
+        <di:waypoint x="949" y="503.0"/>
+        <di:waypoint x="969" y="503.0"/>
+        <di:waypoint x="969" y="193.0"/>
+        <di:waypoint x="1405" y="193.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1132.0" y="155.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f8_di" bpmnElement="Fulfilment_f8">
+        <di:waypoint x="1591" y="193.0"/>
+        <di:waypoint x="1611" y="193.0"/>
+        <di:waypoint x="1611" y="503.0"/>
+        <di:waypoint x="1660" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f9_di" bpmnElement="Fulfilment_f9">
+        <di:waypoint x="1846" y="503.0"/>
+        <di:waypoint x="1915" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f10_di" bpmnElement="Fulfilment_f10">
+        <di:waypoint x="1969" y="503.0"/>
+        <di:waypoint x="1989" y="503.0"/>
+        <di:waypoint x="1989" y="429.0"/>
+        <di:waypoint x="620" y="429.0"/>
+        <di:waypoint x="620" y="503.0"/>
+        <di:waypoint x="640" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1249.5" y="391.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f11_di" bpmnElement="Fulfilment_f11">
+        <di:waypoint x="1969" y="503.0"/>
+        <di:waypoint x="2170" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2014.5" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f12_di" bpmnElement="Fulfilment_f12">
+        <di:waypoint x="2356" y="503.0"/>
+        <di:waypoint x="2376" y="503.0"/>
+        <di:waypoint x="2376" y="813.0"/>
+        <di:waypoint x="2425" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f13_di" bpmnElement="Fulfilment_f13">
+        <di:waypoint x="2611" y="813.0"/>
+        <di:waypoint x="2680" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f14_di" bpmnElement="Fulfilment_f14">
+        <di:waypoint x="2722" y="813.0"/>
+        <di:waypoint x="2742" y="813.0"/>
+        <di:waypoint x="2742" y="503.0"/>
+        <di:waypoint x="2935" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f15_di" bpmnElement="Fulfilment_f15">
+        <di:waypoint x="3121" y="503.0"/>
+        <di:waypoint x="3190" y="503.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f16_di" bpmnElement="Fulfilment_f16">
+        <di:waypoint x="3244" y="503.0"/>
+        <di:waypoint x="3700" y="503.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3417.0" y="465.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f17_di" bpmnElement="Fulfilment_f17">
+        <di:waypoint x="3244" y="503.0"/>
+        <di:waypoint x="3264" y="503.0"/>
+        <di:waypoint x="3264" y="193.0"/>
+        <di:waypoint x="3445" y="193.0"/>
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3209.0" y="310.0" width="130" height="38"/>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_f18_di" bpmnElement="Fulfilment_f18">
+        <di:waypoint x="3631" y="193.0"/>
+        <di:waypoint x="3651" y="193.0"/>
+        <di:waypoint x="3651" y="447.0"/>
+        <di:waypoint x="2660" y="447.0"/>
+        <di:waypoint x="2660" y="813.0"/>
+        <di:waypoint x="2680" y="813.0"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Fulfilment_courier_di" bpmnElement="Fulfilment_courier" isHorizontal="true">
+        <dc:Bounds x="100" y="1030" width="560" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Fulfilment_m0_di" bpmnElement="Fulfilment_m0">
+        <di:waypoint x="733.0" y="546.0"/>
+        <di:waypoint x="733.0" y="1000"/>
+        <di:waypoint x="380" y="1000"/>
+        <di:waypoint x="380" y="1030"/>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Fulfilment_m1_di" bpmnElement="Fulfilment_m1">
+        <di:waypoint x="380" y="1030"/>
+        <di:waypoint x="380" y="1000"/>
+        <di:waypoint x="733.0" y="1000"/>
+        <di:waypoint x="733.0" y="546.0"/>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

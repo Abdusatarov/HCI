@@ -1,0 +1,61 @@
+{
+  "bpmnModdleWarnings": 0,
+  "processes": [
+    {
+      "process": "Order",
+      "nodes": 14,
+      "flows": 14,
+      "reachable": true,
+      "hasExitPath": true,
+      "lanes": 3
+    },
+    {
+      "process": "Catalog",
+      "nodes": 11,
+      "flows": 12,
+      "reachable": true,
+      "hasExitPath": true,
+      "lanes": 3
+    },
+    {
+      "process": "Eligibility",
+      "nodes": 14,
+      "flows": 19,
+      "reachable": true,
+      "hasExitPath": true,
+      "lanes": 3
+    },
+    {
+      "process": "Checkout",
+      "nodes": 17,
+      "flows": 21,
+      "reachable": true,
+      "hasExitPath": true,
+      "lanes": 3
+    },
+    {
+      "process": "Payment",
+      "nodes": 19,
+      "flows": 23,
+      "reachable": true,
+      "hasExitPath": true,
+      "lanes": 3
+    },
+    {
+      "process": "Fulfilment",
+      "nodes": 17,
+      "flows": 19,
+      "reachable": true,
+      "hasExitPath": true,
+      "lanes": 3
+    }
+  ],
+  "diagramCount": 6,
+  "note": "Structural verification; not a process-engine execution or usability study.",
+  "artifactChecks": {
+    "sequenceNodeCrossings": 0,
+    "screenTargets": 33,
+    "pngs": 47,
+    "svgDiagrams": 8
+  }
+}

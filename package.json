@@ -1,0 +1,31 @@
+{
+  "name": "hci",
+  "version": "1.0.0",
+  "description": "Совместный учебный проект по Human–Computer Interaction. В команде два человека.",
+  "scripts": {
+    "generate": "python scripts/generate-bpmn.py",
+    "validate": "python scripts/validate-schema.py && node scripts/validate.mjs && node scripts/check-figma-source.mjs",
+    "export": "node scripts/export.mjs",
+    "check": "npm run generate && npm run validate && npm run export",
+    "design:export": "node scripts/design-preview.mjs",
+    "artifacts:check": "python scripts/document-screens.py && python scripts/check-artifacts.py"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Abdusatarov/HCI.git"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Abdusatarov/HCI/issues"
+  },
+  "homepage": "https://github.com/Abdusatarov/HCI#readme",
+  "devDependencies": {
+    "bpmn-js": "^18.31.1",
+    "bpmn-moddle": "^10.3.1",
+    "esbuild": "^0.28.2",
+    "mermaid": "^12.3.0",
+    "puppeteer": "^25.17.0"
+  },
+  "private": true
+}
