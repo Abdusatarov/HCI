@@ -484,5 +484,13 @@
     },
     "font": "Inter",
     "componentSets": 18
+  },
+  "screenAssembly": {
+    "status": "blocked",
+    "reason": "Figma Starter MCP tool call limit",
+    "lastAttempt": "Native screen composition rejected by Figma before execution",
+    "nativeScreensCreated": false,
+    "localSyntaxCheck": "passed",
+    "resumeScript": "design/screens.js"
   }
 }
